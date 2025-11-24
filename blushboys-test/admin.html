@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель — Blush Boys</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/script.js"></script>
+</head>
+<body onload="checkAuth().then(user => { if(user) initAdmin(); })">
+
+<div class="container dashboard">
+  <h1 style="text-align:center;margin:40px 0;">Админ-панель Blush Boys</h1>
+  <p style="text-align:center;color:#94a3b8;">
+    <span id="email"></span> | <a href="#" onclick="logout()">Выйти</a>
+  </p>
+
+  <!-- Форма создания задачи -->
+  <div class="card">
+    <h2>Создать новую задачу</h2>
+    <input id="title" placeholder="Название задачи" style="width:100%;padding:14px;margin:10px 0;border-radius:12px;border:none;"><br>
+    <textarea id="desc" placeholder="Описание (необязательно)" style="width:100%;height:100px;padding:14px;margin:10px 0;border-radius:12px;border:none;"></textarea><br>
+    <input id="price" type="number" placeholder="Награда ($)" value="50" style="width:200px;padding:14px;margin:10px 0;border-radius:12px;border:none;"><br>
+    <input id="deadline" type="datetime-local" style="padding:14px;margin:10px 0;border-radius:12px;border:none;"><br>
+    <label style="display:inline-block;margin:10px 0;">
+      <input type="checkbox" id="priority"> Приоритетная
+    </label><br>
+
+    <select id="assign" style="width:100%;padding:14px;margin:10px 0;border-radius:12px;border:none;">
+      <option value="">Общая задача (для всех)</option>
+      <!-- Сотрудники подгрузятся сюда -->
+    </select><br><br>
+
+    <button class="btn" onclick="createTask()">Создать задачу</button>
+  </div>
+
+  <!-- Список сотрудников -->
+  <div class="card">
+    <h2>Сотрудники</h2>
+    <div id="employees-list"></div>
+  </div>
+
+  <!-- Все задачи -->
+  <div class="card">
+    <h2>Все задачи</h2>
+    <div id="all-tasks"></div>
+  </div>
+</div>
+
+<script>
+async function initAdmin() {
+  document.getElementById('email').textContent = currentUser.email;
+  loadEmployees();
+  loadAllTasks();
+  setInterval(loadAllTasks, 15000);
+}
+
+async function loadEmployees() {
+  const { data } = await supabase.from('profiles').select('id,email,full_name').order('email');
+  const select = document.getElementById('assign');
+  select.innerHTML = `<option value="">Общая задача (для всех)</option>` + 
+    data.map(p => `<option value="${p.id}">${p.email} ${p.full_name||''}</option>`).join('');
+  
+  document.getElementById('employees-list').innerHTML = data.map(p => 
+    `<div style="padding:15px;background:rgba(255,255,255,0.03);margin:10px 0;border-radius:12px;">
+      ${p.email} ${p.full_name ? '— ' + p.full_name : ''}
+    </div>`
+  ).join('');
+}
+
+async function loadAllTasks() {
+  const { data: tasks } = await supabase.from('tasks').select('*, profiles(email)').order('created_at', { ascending: false });
+  document.getElementById('all-tasks').innerHTML = tasks.map(t => {
+    const executor = t.taken_by ? (t.profiles?.email || 'Кто-то') : (t.assigned_to ? 'Назначена' : 'Общая');
+    return `<div class="task ${t.priority?'priority':''} ${t.status==='completed'?'completed':''}">
+      <strong>${t.title}</strong> — $${t.price} — ${executor}
+      <p>${t.description||''}</p>
+      <small>Статус: ${t.status === 'completed' ? 'Выполнена' : t.status === 'in_progress' ? 'В работе' : 'Открыта'}</small>
+    </div>`;
+  }).join('');
+}
+
+window.createTask = async () => {
+  const assigned = document.getElementById('assign').value || null;
+  await supabase.from('tasks').insert({
+    title: document.getElementById('title').value,
+    description: document.getElementById('desc').value,
+    price: +document.getElementById('price').value || 0,
+    priority: document.getElementById('priority').checked,
+    deadline: document.getElementById('deadline').value || null,
+    assigned_to: assigned,
+    created_by: currentUser.id
+  });
+  loadAllTasks();
+  // Очистка формы
+  document.getElementById('title').value = '';
+  document.getElementById('desc').value = '';
+};
+</script>
+</body>
+</html>
