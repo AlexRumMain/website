@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/script.js"></script>
 </head>
-<body onload="checkAuth().then(user => { if(user) init(); })">
+<body onload="requireAuth() && redirectByRole()">
   <div class="container dashboard">
     <h1 style="text-align:center;margin:40px 0;">Личный кабинет</h1>
     <p style="text-align:center;color:#94a3b8;">Привет, <span id="email"></span> | <a href="#" onclick="logout()">Выйти</a></p>
@@ -67,4 +67,5 @@
     }
   </script>
 </body>
+
 </html>
