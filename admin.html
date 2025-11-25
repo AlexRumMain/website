@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/script.js"></script>
 </head>
-<body onload="checkAuth().then(user => { if(user) initAdmin(); })">
+<body onload="requireAuth() && redirectByRole()">
 
 <div class="container dashboard">
   <h1 style="text-align:center;margin:40px 0;">Админ-панель Blush Boys</h1>
@@ -99,4 +99,5 @@ window.createTask = async () => {
 };
 </script>
 </body>
+
 </html>
