@@ -30,13 +30,14 @@
 </div>
 
 <script>
+// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 async function login() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('pass').value;
 
   if (!email || !password) return alert('Заполни все поля');
 
-  const { data, error = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     alert('Ошибка входа: ' + error.message);
