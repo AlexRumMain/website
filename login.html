@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blush Boys — Вход</title>
+  <title>Blush Boys — Вход / Регистрация</title>
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/script.js"></script>
@@ -13,7 +13,8 @@
 <div class="container" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;">
   <img src="https://i.ibb.co.com/4gSq0NbC/image.jpg" alt="Blush Boys" class="logo" style="height:100px;margin-bottom:30px;">
 
-  <div style="background:rgba(255,255,255,0.04);padding:50px 60px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);max-width:420px;width:100%;">
+  <!-- Форма входа -->
+  <div id="login-form" style="background:rgba(255,255,255,0.04);padding:50px 60px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);max-width:420px;width:100%;">
     <h1 style="text-align:center;margin-bottom:40px;font-size:36px;">Вход в кабинет</h1>
 
     <input type="email" id="email" placeholder="Email" class="input"><br><br>
@@ -22,7 +23,21 @@
     <button class="btn" onclick="login()" style="width:100%;padding:16px;font-size:18px;">Войти</button>
 
     <p style="text-align:center;margin-top:30px;color:#94a3b8;">
-      Нет аккаунта? <a href="#" onclick="alert('Напиши владельцу — он создаст тебе доступ')" style="color:var(--primary)">напиши владельцу</a>
+      Новый сотрудник? <a href="#" onclick="showRegister()" style="color:var(--primary);font-weight:600;">Регистрация →</a>
+    </p>
+  </div>
+
+  <!-- Форма регистрации (скрыта по умолчанию) -->
+  <div id="register-form" style="display:none;background:rgba(255,255,255,0.04);padding:50px 60px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);max-width:420px;width:100%;">
+    <h1 style="text-align:center;margin-bottom:40px;font-size:36px;">Регистрация</h1>
+
+    <input type="email" id="reg-email" placeholder="Рабочая почта" class="input"><br><br>
+    <input type="password" id="reg-pass" placeholder="Придумай пароль (минимум 6 символов)" class="input"><br><br><br>
+
+    <button class="btn" onclick="register()" style="width:100%;padding:16px;font-size:18px;">Зарегистрироваться</button>
+
+    <p style="text-align:center;margin-top:20px;">
+      <a href="#" onclick="showLogin()" style="color:#94a3b8;">← Вернуться ко входу</a>
     </p>
   </div>
 
@@ -30,26 +45,57 @@
 </div>
 
 <script>
-// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+function showRegister() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'block';
+}
+function showLogin() {
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('login-form').style.display = 'block';
+}
+
 async function login() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('pass').value;
-
   if (!email || !password) return alert('Заполни все поля');
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) alert('Ошибка: ' + error.message);
+  else redirectByRole();
+}
+
+async function register() {
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-pass').value;
+
+  if (!email || !password || password.length < 6) {
+    return alert('Проверь email и пароль (минимум 6 символов)');
+  }
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: location.origin + '/dashboard.html',  // после подтверждения — сразу в кабинет
+    }
+  });
 
   if (error) {
-    alert('Ошибка входа: ' + error.message);
+    alert('Ошибка регистрации: ' + error.message);
   } else {
-    redirectByRole();
+    alert('Отлично! Проверь почту — пришло письмо с подтверждением.\nПосле клика по ссылке ты попадёшь в личный кабинет.');
+    showLogin();
   }
 }
 
-// Enter → вход
-document.addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+// Enter → действие
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('login-form').style.display !== 'none') login();
+    else register();
+  }
+});
 </script>
 
 </body>
 </html>
-
