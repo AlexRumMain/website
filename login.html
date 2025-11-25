@@ -3,39 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blush Boys — Вход</title>
+  <title>Blush Boys — Вход / Регистрация</title>
   <link rel="stylesheet" href="assets/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/script.js"></script>
 </head>
-<body class="hero" style="text-align:center;padding-top:15vh;">
+<body class="hero" style="text-align:center;padding-top:10vh;">
   <div class="container">
-    <img src="https://i.ibb.co/0jKX7Lz/blushboys-logo.png" alt="Blush Boys" class="logo">
-    <h1>BLUSH BOYS</h1>
-    <p style="font-size:20px;margin:30px 0;color:#94a3b8;">Вход в личный кабинет</p>
+    <img src="https://i.ibb.co.com/0jKX7Lz/blushboys-logo.png" alt="Blush Boys" class="logo">
+    <h1>BLUSH BOYS AGENCY</h1>
 
-    <input type="email" id="email" placeholder="Email" style="width:380px;padding:16px;margin:10px;border-radius:12px;border:none;font-size:16px;"><br>
-    <input type="password" id="pass" placeholder="Пароль" style="width:380px;padding:16px;margin:10px;border-radius:12px;border:none;font-size:16px;"><br><br>
-    <button class="btn" onclick="login()">Войти</button><br><br>
-    <small style="color:#64748b;">Ещё нет аккаунта? Напиши владельцу — он создаст</small>
+    <div class="card" style="display:inline-block;max-width:420px;margin-top:40px;">
+      <h2 style="margin-bottom:20px;">Вход для сотрудников</h2>
+      <input type="email" id="email" placeholder="Email" class="input"><br><br>
+      <input type="password" id="pass" placeholder="Пароль" class="input"><br><br>
+      <button class="btn" onclick="login()">Войти</button>
+      <p style="margin-top:20px;color:#94a3b8;font-size:14px;">
+        Нет аккаунта? Нажми → <a href="#" onclick="showRegister()" style="color:var(--primary)">Регистрация</a>
+      </p>
+    </div>
+
+    <!-- Регистрация (скрыта по умолчанию) -->
+    <div id="register-form" class="card" style="display:none;max-width:420px;margin-top:40px;">
+      <h2>Регистрация сотрудника</h2>
+      <input type="email" id="reg-email" placeholder="Рабочая почта" class="input"><br><br>
+      <input type="password" id="reg-pass" placeholder="Придумай пароль" class="input"><br><br>
+      <button class="btn" onclick="register()">Зарегистрироваться</button>
+      <p style="margin-top:15px;font-size:14px;"><a href="#" onclick="showLogin()">← Назад ко входу</a></p>
+    </div>
   </div>
 
   <script>
+    function showRegister() {
+      document.querySelector('.card').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+    }
+    function showLogin() {
+      document.querySelector('.card').style.display = 'block';
+      document.getElementById('register-form').style.display = 'none';
+    }
+
     async function login() {
       const { error } = await supabase.auth.signInWithPassword({
         email: document.getElementById('email').value,
         password: document.getElementById('pass').value
       });
       if (error) alert('Ошибка: ' + error.message);
-      else {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', (await supabase.auth.getUser()).data.user.id).single();
-        if (profile.role === 'admin_owner' || profile.role === 'admin_service') {
-          location.href = 'admin.html';
-        } else {
-          location.href = 'dashboard.html';
+      else redirectByRole();
+    }
+
+    async function register() {
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-pass').value;
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: location.origin + '/dashboard.html'  // после подтверждения — сразу в кабинет
         }
+      });
+
+      if (error) alert('Ошибка: ' + error.message);
+      else {
+        alert('Проверь почту! Пришло письмо с подтверждением.');
+        showLogin();
       }
     }
+
     // Enter → вход
     document.addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
   </script>
